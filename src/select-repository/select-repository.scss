@@ -1,0 +1,24 @@
+@import "node_modules/azure-devops-ui/Core/_platformCommon.scss";
+
+
+#root {
+    height: 100%;
+    width: 100%;
+    display: flex;
+}
+
+.select-repository {
+    font-size: $fontSizeM;
+}
+
+.ms-Icon--GitLogo {
+    color: rgb(240, 81, 41);
+    margin-right: 4px;
+}
+
+.select-repository-button-bar {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    display: block;
+    text-align: right;
+}

@@ -1,0 +1,13 @@
+@import "node_modules/azure-devops-ui/Core/_platformCommon.scss";
+
+#root {
+    width: 100%;
+}
+
+.page-content {
+    padding-top: $spacing-32;
+}
+
+.bolt-formitem-message-error > ul > li {
+    list-style-type: disc;
+}

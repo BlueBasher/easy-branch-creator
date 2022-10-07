@@ -1,0 +1,93 @@
+{
+  "manifestVersion": 1,
+  "version": "1.0.7",
+  "name": "Easy Branch Creator",
+  "description": "Use Easy Branch Creator to create branches directly from within workitems using fields from the workitem for the branch name.",
+  "publisher": "bluebasher",
+  "demands": [
+    "api-version/3.0"
+  ],
+  "scopes": [
+    "vso.work",
+    "vso.code_manage"
+  ],
+  "categories": [
+    "Azure Repos"
+  ],
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services"
+    }
+  ],
+  "content": {
+    "details": {
+      "path": "README.md"
+    }
+  },
+  "icons": {
+    "default": "img/branching.png"
+  },
+  "links": {
+    "repository": {
+      "uri": "https://github.com/bluebasher/easy-branch-creator"
+    },
+    "support": {
+      "uri": "https://github.com/bluebasher/easy-branch-creator/issues"
+    },
+    "license": {
+      "uri": "https://github.com/bluebasher/easy-branch-creator/blob/master/LICENSE"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "uri": "https://github.com/bluebasher/easy-branch-creator"
+  },
+  "files": [
+    {
+      "path": "dist",
+      "addressable": true
+    },
+    {
+      "path": "img",
+      "addressable": true
+    }
+  ],
+  "contributions": [
+    {
+      "id": "create-branch-from-workitem",
+      "type": "ms.vss-web.action",
+      "description": "Create easy branch",
+      "targets": [
+        "ms.vss-work-web.work-item-context-menu"
+      ],
+      "properties": {
+        "text": "Create easy branch",
+        "title": "Create easy branch",
+        "icon": "img/branching.png",
+        "groupId": "actions",
+        "uri": "dist/create-branch/create-branch.html"
+      }
+    },
+    {
+      "id": "select-repository",
+      "type": "ms.vss-web.external-content",
+      "description": "The content to be displayed in the dialog",
+      "properties": {
+        "uri": "dist/select-repository/select-repository.html"
+      }
+    },
+    {
+      "id": "settings-hub",
+      "type": "ms.vss-web.hub",
+      "targets": [
+        "ms.vss-web.project-admin-hub-group"
+      ],
+      "properties": {
+        "name": "Easy Branch Creator",
+        "order": 10,
+        "uri": "dist/settings-hub/settings-hub.html",
+        "icon": "img/branching.png"
+      }
+    }
+  ]
+}
