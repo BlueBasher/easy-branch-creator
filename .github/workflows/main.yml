@@ -56,4 +56,4 @@ jobs:
         with:
           name: tfxpackage
       
-      - run: ls tfxpackage
+      - run: ls
