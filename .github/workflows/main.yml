@@ -27,5 +27,11 @@ jobs:
           useConfigFile: true
           configFilePath: 'git-version.yml'
 
+      - run: pwd
+      - run: ls
+
+      - name: NPM or Yarn install with caching
+        uses: bahmutov/npm-install@v1.6.0
+
       - name: Npm install
         run: npm install
