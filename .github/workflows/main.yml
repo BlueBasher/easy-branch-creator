@@ -27,11 +27,15 @@ jobs:
           useConfigFile: true
           configFilePath: 'git-version.yml'
 
-      - run: pwd
-      - run: ls
-
-      - name: NPM or Yarn install with caching
-        uses: bahmutov/npm-install@v1.6.0
-
       - name: Npm install
         run: npm install
+
+      - name: Npm compile
+        run: npm run compile
+
+  deployment_test:
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - name: Tfx publish
+        run: tfx extension publish --manifest-globs vss-extension.json --overrides-file configs/test.json --override '{"version": "0.0.9999"}' --output-path out
