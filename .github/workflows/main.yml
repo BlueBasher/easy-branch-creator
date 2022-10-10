@@ -13,6 +13,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0.9.7
@@ -22,6 +24,5 @@ jobs:
       - name: Determine Version
         uses: gittools/actions/gitversion/execute@v0.9.7
         with:
-          fetch-depth: 0
           useConfigFile: true
           configFilePath: 'git-version.yml'
