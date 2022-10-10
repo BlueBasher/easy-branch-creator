@@ -30,6 +30,9 @@ jobs:
       - name: Npm install
         run: npm install
 
+      - name: Tfx install
+        run: npm install -g tfx-cli
+
       - name: Npm compile and Package
         run: npm run compile
 
