@@ -56,4 +56,7 @@ jobs:
         with:
           name: tfxpackage
       
-      - run: ls
+      - name: Tfx Package
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+        run: "tfx extension publish --vsix ./ --auth-type pat --token $AZURE_DEVOPS_PAT"
