@@ -26,3 +26,6 @@ jobs:
         with:
           useConfigFile: true
           configFilePath: 'git-version.yml'
+
+      - name: Npm install
+        run: npm install
