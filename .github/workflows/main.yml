@@ -43,6 +43,7 @@ jobs:
       - name: Upload Tfx Package
         uses: actions/upload-artifact@v3.1.0
         with:
+          name: tfxpackage
           path: ./out/
 
   deployment_test:
@@ -52,3 +53,7 @@ jobs:
     steps:
       - name: Download Tfx Package
         uses: actions/download-artifact@v3.0.0
+        with:
+          name: tfxpackage
+      
+      - run: ls tfxpackage
