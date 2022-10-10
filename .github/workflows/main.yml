@@ -55,6 +55,9 @@ jobs:
         uses: actions/download-artifact@v3.0.0
         with:
           name: tfxpackage
+
+      - name: Tfx install
+        run: npm install -g tfx-cli
       
       - name: Tfx Package
         env:
