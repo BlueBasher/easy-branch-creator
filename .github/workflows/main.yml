@@ -38,4 +38,4 @@ jobs:
     environment: test
     steps:
       - name: Tfx publish
-        run: tfx extension publish --manifest-globs vss-extension.json --overrides-file configs/test.json --override '{"version": "0.0.9999"}' --output-path out
+        run: "tfx extension publish --manifest-globs vss-extension.json --overrides-file configs/test.json --override \"{\"version\": \"$GITVERSION_SEMVER\"}\" --output-path out"
