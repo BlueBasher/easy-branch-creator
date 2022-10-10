@@ -30,12 +30,21 @@ jobs:
       - name: Npm install
         run: npm install
 
-      - name: Npm compile
+      - name: Npm compile and Package
         run: npm run compile
 
+      - name: Tfx Package
+        run: "tfx extension create --manifest-globs vss-extension.json --overrides-file configs/test.json --override \"{\"version\": \"$GITVERSION_SEMVER\"}\" --output-path out"
+
+      - name: Upload Tfx Package
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          path: ./out/
+
   deployment_test:
+    needs: [build]
     runs-on: ubuntu-latest
     environment: test
     steps:
-      - name: Tfx publish
-        run: "tfx extension publish --manifest-globs vss-extension.json --overrides-file configs/test.json --override \"{\"version\": \"$GITVERSION_SEMVER\"}\" --output-path out"
+      - name: Download Tfx Package
+        uses: actions/download-artifact@v3.0.0
