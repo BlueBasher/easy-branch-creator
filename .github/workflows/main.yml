@@ -22,6 +22,7 @@ jobs:
           versionSpec: '5.x'
 
       - name: Determine Version
+        id: gitversion
         uses: gittools/actions/gitversion/execute@v0.9.7
         with:
           useConfigFile: true
@@ -37,7 +38,7 @@ jobs:
         run: npm run compile
 
       - name: Tfx Package
-        run: "tfx extension create --manifest-globs vss-extension.json --overrides-file configs/test.json --override \"{\"version\": \"$GITVERSION_SEMVER\"}\" --output-path out"
+        run: "tfx extension create --manifest-globs vss-extension.json --overrides-file configs/test.json --override \"{\"version\": \"${{ steps.gitversion.outputs.semVer }}\"}\" --output-path out"
 
       - name: Upload Tfx Package
         uses: actions/upload-artifact@v3.1.0
