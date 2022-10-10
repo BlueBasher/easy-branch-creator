@@ -34,11 +34,11 @@ jobs:
       - name: Tfx install
         run: npm install -g tfx-cli
 
-      - name: Npm compile and Package
+      - name: Npm compile
         run: npm run compile
 
       - name: Tfx Package
-        run: "tfx extension create --manifest-globs vss-extension.json --overrides-file configs/test.json --override \"{\"version\": \"${{ steps.gitversion.outputs.semVer }}\"}\" --output-path out"
+        run: "tfx extension create --manifest-globs vss-extension.json --overrides-file configs/test.json --override '{\"version\": \"${{ steps.gitversion.outputs.semVer }}\"}' --output-path out"
 
       - name: Upload Tfx Package
         uses: actions/upload-artifact@v3.1.0
