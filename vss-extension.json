@@ -42,6 +42,14 @@
     "type": "git",
     "uri": "https://github.com/bluebasher/easy-branch-creator"
   },
+  "screenshots": [
+    {
+      "path": "marketplace/create-branch-action.png"
+    },
+    {
+      "path": "marketplace/settings.png"
+    }
+  ],
   "files": [
     {
       "path": "dist",
