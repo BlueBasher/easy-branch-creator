@@ -58,6 +58,10 @@
     {
       "path": "img",
       "addressable": true
+    },
+    {
+      "path": "marketplace",
+      "addressable": true
     }
   ],
   "contributions": [
