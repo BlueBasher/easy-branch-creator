@@ -18,9 +18,9 @@ function createBranchFromWorkItem() {
             }
 
             const service = await SDK.getService<ILocationService>(CommonServiceIds.LocationService);
-            const hostBaseUrl = new URL(await service.getResourceAreaLocation(CoreRestClient.RESOURCE_AREA_ID));
+            const hostBaseUrl = await service.getResourceAreaLocation(CoreRestClient.RESOURCE_AREA_ID);
             const host = SDK.getHost();
-            const gitBaseUrl = (hostBaseUrl.host.toLowerCase().indexOf(host.name.toLowerCase()) == -1 ? `/${host.name}` : "") + `/${project}/_git`;
+            const gitBaseUrl = `${hostBaseUrl}${(hostBaseUrl.toLowerCase().indexOf(host.name.toLowerCase()) == -1 ? `${host.name}/` : "")}${project.name}/_git`;
 
             const branchCreator = new BranchCreator();
             const gitRestClient = getClient(GitRestClient);

@@ -8,7 +8,6 @@ import { Tokenizer } from "./tokenizer";
 export class BranchCreator {
 
     public async createBranch(workItemId: number, repositoryId: string, repositoryName: string, project: string, gitBaseUrl: string): Promise<void> {
-        const host = SDK.getHost();
         const navigationService = await SDK.getService<IHostNavigationService>(CommonServiceIds.HostNavigationService);
         const globalMessagesSvc = await SDK.getService<IGlobalMessagesService>(CommonServiceIds.GlobalMessagesService);
         const gitRestClient = getClient(GitRestClient);
