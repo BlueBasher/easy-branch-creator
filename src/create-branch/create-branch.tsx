@@ -19,13 +19,15 @@ function createBranchFromWorkItem() {
 
             const service = await SDK.getService<ILocationService>(CommonServiceIds.LocationService);
             const hostBaseUrl = new URL(await service.getResourceAreaLocation(CoreRestClient.RESOURCE_AREA_ID));
+            const host = SDK.getHost();
+            const gitBaseUrl = (hostBaseUrl.host.toLowerCase().indexOf(host.name.toLowerCase()) == -1 ? `/${host.name}` : "") + `/${project}/_git`;
 
             const branchCreator = new BranchCreator();
             const gitRestClient = getClient(GitRestClient);
             const repositories = await gitRestClient.getRepositories(project.name);
             if (repositories.length === 1) {
                 getWorkItemIds(actionContext).forEach((id: number) => {
-                    branchCreator.createBranch(id, repositories[0].id, repositories[0].name, project.name, hostBaseUrl);
+                    branchCreator.createBranch(id, repositories[0].id, repositories[0].name, project.name, gitBaseUrl);
                 });
             }
             else {
@@ -39,7 +41,7 @@ function createBranchFromWorkItem() {
                     onClose: (result: ISelectRepositoryResult | undefined) => {
                         if (result !== undefined && result.repositoryId !== undefined && result.repositoryName !== undefined) {
                             getWorkItemIds(actionContext).forEach((id: number) => {
-                                branchCreator.createBranch(id, result.repositoryId!, result.repositoryName!, project.name, hostBaseUrl);
+                                branchCreator.createBranch(id, result.repositoryId!, result.repositoryName!, project.name, gitBaseUrl);
                             });
                         }
                     }
