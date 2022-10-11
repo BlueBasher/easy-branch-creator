@@ -63,7 +63,7 @@
       "properties": {
         "text": "Create easy branch",
         "title": "Create easy branch",
-        "icon": "img/branching.png",
+        "icon": "img/branching-icon.png",
         "groupId": "actions",
         "uri": "dist/create-branch/create-branch.html"
       }
@@ -86,7 +86,7 @@
         "name": "Easy Branch Creator",
         "order": 10,
         "uri": "dist/settings-hub/settings-hub.html",
-        "icon": "img/branching.png"
+        "icon": "img/branching-icon.png"
       }
     }
   ]
