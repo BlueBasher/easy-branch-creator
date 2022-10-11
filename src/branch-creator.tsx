@@ -7,14 +7,14 @@ import { Tokenizer } from "./tokenizer";
 
 export class BranchCreator {
 
-    public async createBranch(workItemId: number, repositoryId: string, repositoryName: string, project: string): Promise<void> {
+    public async createBranch(workItemId: number, repositoryId: string, repositoryName: string, project: string, hostBaseUrl: URL): Promise<void> {
         const host = SDK.getHost();
         const navigationService = await SDK.getService<IHostNavigationService>(CommonServiceIds.HostNavigationService);
         const globalMessagesSvc = await SDK.getService<IGlobalMessagesService>(CommonServiceIds.GlobalMessagesService);
         const gitRestClient = getClient(GitRestClient);
 
         const branchName = await this.getBranchName(workItemId, project);
-        const branchUrl = `/${host.name}/${project}/_git/${repositoryName}?version=GB${encodeURI(branchName)}`;
+        const branchUrl = (hostBaseUrl.host.toLowerCase().indexOf(project.toLowerCase()) == -1 ? `/${host.name}` : "") + `/${project}/_git/${repositoryName}?version=GB${encodeURI(branchName)}`;
 
         if (await this.branchExists(gitRestClient, repositoryId, project, branchName)) {
             console.info(`Branch ${branchName} aready exists in repository ${repositoryName}`);

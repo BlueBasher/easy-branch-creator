@@ -1,6 +1,6 @@
 import * as SDK from "azure-devops-extension-sdk";
-import { getClient } from "azure-devops-extension-api";
-import { CommonServiceIds, IProjectPageService, IProjectInfo, IHostPageLayoutService, IDialogOptions } from "azure-devops-extension-api";
+import { getClient, ILocationService, CommonServiceIds, IProjectPageService, IProjectInfo, IHostPageLayoutService } from "azure-devops-extension-api";
+import { CoreRestClient } from "azure-devops-extension-api/Core";
 import { GitRestClient } from "azure-devops-extension-api/Git";
 
 import { BranchCreator } from "../branch-creator";
@@ -17,12 +17,15 @@ function createBranchFromWorkItem() {
                 return;
             }
 
+            const service = await SDK.getService<ILocationService>(CommonServiceIds.LocationService);
+            const hostBaseUrl = new URL(await service.getResourceAreaLocation(CoreRestClient.RESOURCE_AREA_ID));
+
             const branchCreator = new BranchCreator();
             const gitRestClient = getClient(GitRestClient);
             const repositories = await gitRestClient.getRepositories(project.name);
             if (repositories.length === 1) {
                 getWorkItemIds(actionContext).forEach((id: number) => {
-                    branchCreator.createBranch(id, repositories[0].id, repositories[0].name, project.name);
+                    branchCreator.createBranch(id, repositories[0].id, repositories[0].name, project.name, hostBaseUrl);
                 });
             }
             else {
@@ -36,7 +39,7 @@ function createBranchFromWorkItem() {
                     onClose: (result: ISelectRepositoryResult | undefined) => {
                         if (result !== undefined && result.repositoryId !== undefined && result.repositoryName !== undefined) {
                             getWorkItemIds(actionContext).forEach((id: number) => {
-                                branchCreator.createBranch(id, result.repositoryId!, result.repositoryName!, project.name);
+                                branchCreator.createBranch(id, result.repositoryId!, result.repositoryName!, project.name, hostBaseUrl);
                             });
                         }
                     }
