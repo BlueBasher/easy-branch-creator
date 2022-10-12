@@ -1,6 +1,6 @@
 {
   "manifestVersion": 1,
-  "version": "1.0.7",
+  "version": "0.0.0.1",
   "name": "Easy Branch Creator",
   "description": "Use Easy Branch Creator to create branches directly from within workitems using fields from the workitem for the branch name.",
   "publisher": "bluebasher",
@@ -68,13 +68,13 @@
     {
       "id": "create-branch-from-workitem",
       "type": "ms.vss-web.action",
-      "description": "Create easy branch",
+      "description": "Easy branch creator",
       "targets": [
         "ms.vss-work-web.work-item-context-menu"
       ],
       "properties": {
-        "text": "Create easy branch",
-        "title": "Create easy branch",
+        "text": "Easy branch creator",
+        "title": "Easy branch creator",
         "icon": "img/branching-icon.png",
         "groupId": "actions",
         "uri": "dist/create-branch/create-branch.html"
