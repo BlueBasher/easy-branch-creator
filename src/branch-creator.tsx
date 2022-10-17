@@ -65,14 +65,20 @@ export class BranchCreator {
     private async getBranchName(workItemId: number, project: string): Promise<string> {
         const workItemTrackingRestClient = getClient(WorkItemTrackingRestClient);
         const workItem = await workItemTrackingRestClient.getWorkItem(workItemId, project, undefined, undefined, WorkItemExpand.Fields);
+        const workItemType = workItem.fields["System.WorkItemType"];
 
         const storageService = new StorageService();
         const settingsDocument = await storageService.getSettings();
-        
-        const tokenizer = new Tokenizer();
-        const tokens = tokenizer.getTokens(settingsDocument.branchNameTemplate);
 
-        let branchName = settingsDocument.branchNameTemplate;
+        let branchNameTemplate = settingsDocument.defaultBranchNameTemplate;
+        if (workItemType in settingsDocument.branchNameTemplates) {
+            branchNameTemplate = settingsDocument.branchNameTemplates[workItemType].value;
+        }
+
+        const tokenizer = new Tokenizer();
+        const tokens = tokenizer.getTokens(branchNameTemplate);
+
+        let branchName = branchNameTemplate;
         tokens.forEach((token) => {
             let workItemFieldValue = workItem.fields[token.replace('${', '').replace('}', '')];
             if (workItemFieldValue) {
@@ -83,7 +89,7 @@ export class BranchCreator {
             branchName = branchName.replace(token, workItemFieldValue);
         });
 
-        if (settingsDocument.lowercaseBranchName){
+        if (settingsDocument.lowercaseBranchName) {
             branchName = branchName.toLowerCase();
         }
 

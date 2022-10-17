@@ -8,6 +8,10 @@
     padding-top: $spacing-32;
 }
 
-.bolt-formitem-message-error > ul > li {
+.bolt-formitem-message-error>ul>li {
+    margin-left: $spacing-16;
+}
+
+.bolt-formitem-message-error>ul>li {
     list-style-type: disc;
 }

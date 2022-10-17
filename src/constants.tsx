@@ -1,8 +1,11 @@
 import SettingsDocument from "./settingsDocument";
 
 export class Constants {
+    public static DefaultBranchNameTemplate: string = "feature/${System.Id}-${System.Title}";
+
     public static DefaultSettingsDocument: SettingsDocument = {
-        branchNameTemplate: "feature/${System.Id}-${System.Title}",
+        defaultBranchNameTemplate: Constants.DefaultBranchNameTemplate,
+        branchNameTemplates: {},
         nonAlphanumericCharactersReplacement: "_",
         lowercaseBranchName: false,
         id: ""
