@@ -8,7 +8,7 @@ import { GitRestClient } from "azure-devops-extension-api/Git";
 
 import { Button } from "azure-devops-ui/Button";
 import { ButtonGroup } from "azure-devops-ui/ButtonGroup";
-import { Dropdown } from "azure-devops-ui/Dropdown";
+import { EditableDropdown } from "azure-devops-ui/EditableDropdown";
 import { DropdownSelection } from "azure-devops-ui/Utilities/DropdownSelection";
 import { ObservableArray } from "azure-devops-ui/Core/Observable";
 import { IListBoxItem } from "azure-devops-ui/ListBox";
@@ -53,12 +53,12 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
     public render(): JSX.Element {
         return (
             <div className="select-repository flex-column flex-grow">
-                <Dropdown<string>
+                <EditableDropdown<string>
                     disabled={!this.state.ready}
                     items={this.repositories}
                     selection={this.selection}
-                    onSelect={(event, item) => {
-                        this.setSelectedValue(item.data!);
+                    onValueChange={(item?: IListBoxItem<string>) => {
+                        this.setSelectedValue(item?.data);
                     }}
                     renderItem={(rowIndex: number, columnIndex: number, tableColumn: ITableColumn<IListBoxItem<string>>, tableItem: IListBoxItem<string>) => {
                         return (
@@ -83,7 +83,7 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
                 />
                 <ButtonGroup className="select-repository-button-bar">
                     <Button
-                        disabled={!this.state.ready}
+                        disabled={!this.state.selectedValue}
                         primary={true}
                         text="Create Branch"
                         onClick={() => this.close(this.state.selectedValue)}
@@ -125,7 +125,7 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
         }))
     }
 
-    private setSelectedValue(repositoryId: string) {
+    private setSelectedValue(repositoryId?: string) {
         this.setState(prevState => ({
             ...prevState,
             selectedValue: repositoryId
