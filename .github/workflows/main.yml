@@ -51,6 +51,7 @@ jobs:
           path: ./out/
 
   deployment_test:
+    if: github.ref == 'refs/heads/main'
     needs: [build]
     runs-on: ubuntu-latest
     environment: test
