@@ -38,6 +38,7 @@ jobs:
         run: npm run compile
 
       - name: Tfx Package Test
+        if: github.ref == 'refs/heads/main'
         run: "tfx extension create --manifest-globs vss-extension.json --overrides-file configs/test.json --override '{\"version\": \"${{ steps.gitversion.outputs.semVer }}.${{ github.run_number }}\"}' --output-path out"
 
       - name: Tfx Package Prod
