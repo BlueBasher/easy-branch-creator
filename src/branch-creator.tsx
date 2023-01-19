@@ -71,7 +71,7 @@ export class BranchCreator {
         const settingsDocument = await storageService.getSettings();
 
         let branchNameTemplate = settingsDocument.defaultBranchNameTemplate;
-        if (workItemType in settingsDocument.branchNameTemplates) {
+        if (workItemType in settingsDocument.branchNameTemplates && settingsDocument.branchNameTemplates[workItemType].isActive) {
             branchNameTemplate = settingsDocument.branchNameTemplates[workItemType].value;
         }
 
