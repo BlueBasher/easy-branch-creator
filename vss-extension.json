@@ -8,7 +8,7 @@
     "api-version/3.0"
   ],
   "scopes": [
-    "vso.work",
+    "vso.work_write",
     "vso.code_manage"
   ],
   "categories": [

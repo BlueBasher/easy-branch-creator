@@ -9,6 +9,7 @@ To debug easy-branch-creator the following steps needs to be executed:
 1. Run `npm install`
 1. Run `npm run publish:dev`
    - Supply the Personal Access Token when the command requests it.
+   - If you get this error `error:0308010C:digital envelope routines::unsupported`, then run command `$env:NODE_OPTIONS = "--openssl-legacy-provider"`
 1. In Visual Studio Marketplace, share the extension wth your Azure DevOps Organisation.
 1. In your Azure DevOps Organisation, install the extension.
 1. Run `npm start`

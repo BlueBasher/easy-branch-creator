@@ -1,21 +1,23 @@
 import * as SDK from "azure-devops-extension-sdk";
-import { CommonServiceIds, getClient, IGlobalMessagesService, IHostNavigationService } from "azure-devops-extension-api";
-import { WorkItemTrackingRestClient, WorkItemExpand } from "azure-devops-extension-api/WorkItemTracking";
+import { CommonServiceIds, getClient, IGlobalMessagesService, IHostNavigationService, IProjectInfo } from "azure-devops-extension-api";
+import { WorkItemTrackingRestClient, WorkItemExpand, WorkItemRelation } from "azure-devops-extension-api/WorkItemTracking";
 import { GitRestClient } from "azure-devops-extension-api/Git";
 import { StorageService } from "./storage-service";
 import { Tokenizer } from "./tokenizer";
+import { JsonPatchOperation, Operation } from "azure-devops-extension-api/WebApi";
 
 export class BranchCreator {
 
-    public async createBranch(workItemId: number, repositoryId: string, repositoryName: string, project: string, gitBaseUrl: string): Promise<void> {
+    public async createBranch(workItemId: number, repositoryId: string, repositoryName: string, project: IProjectInfo, gitBaseUrl: string): Promise<void> {
         const navigationService = await SDK.getService<IHostNavigationService>(CommonServiceIds.HostNavigationService);
         const globalMessagesSvc = await SDK.getService<IGlobalMessagesService>(CommonServiceIds.GlobalMessagesService);
         const gitRestClient = getClient(GitRestClient);
+        const workItemTrackingRestClient = getClient(WorkItemTrackingRestClient);
 
-        const branchName = await this.getBranchName(workItemId, project);
+        const branchName = await this.getBranchName(workItemTrackingRestClient, workItemId, project.name);
         const branchUrl = `${gitBaseUrl}/${repositoryName}?version=GB${encodeURI(branchName)}`;
 
-        if (await this.branchExists(gitRestClient, repositoryId, project, branchName)) {
+        if (await this.branchExists(gitRestClient, repositoryId, project.name, branchName)) {
             console.info(`Branch ${branchName} aready exists in repository ${repositoryName}`);
 
             globalMessagesSvc.addToast({
@@ -29,13 +31,14 @@ export class BranchCreator {
             return;
         }
 
-        const defaultBranch = (await gitRestClient.getBranches(repositoryId, project)).find((x) => x.isBaseVersion);
+        const defaultBranch = (await gitRestClient.getBranches(repositoryId, project.name)).find((x) => x.isBaseVersion);
         if (!defaultBranch) {
             console.warn(`Default branch ${branchName} not found`);
             return;
         }
 
         await this.createRef(gitRestClient, repositoryId, defaultBranch.commit.commitId, branchName);
+        await this.linkBranchToWorkItem(workItemTrackingRestClient, project.id, repositoryId, workItemId, branchName);
         console.log(`Branch ${branchName} created in repository ${repositoryName}`);
 
         globalMessagesSvc.addToast({
@@ -57,13 +60,32 @@ export class BranchCreator {
         await gitRestClient.updateRefs([gitRefUpdate], repositoryId);
     }
 
+    private async linkBranchToWorkItem(workItemTrackingRestClient: WorkItemTrackingRestClient, projectId: string, repositoryId: string, workItemId: number, branchName: string) {
+        const branchRef = `${projectId}/${repositoryId}/GB${branchName}`;
+        const relation: WorkItemRelation = {
+            rel: "ArtifactLink",
+            url: `vstfs:///Git/Ref/${encodeURIComponent(branchRef)}`,
+            "attributes": {
+                name: "Branch"
+            }
+        };
+        const document: JsonPatchOperation[] = [
+            {
+                from: "",
+                op: Operation.Add,
+                path: "/relations/-",
+                value: relation
+            }
+        ];
+        await workItemTrackingRestClient.updateWorkItem(document, workItemId);
+    }
+
     private async branchExists(gitRestClient: GitRestClient, repositoryId: string, project: string, branchName: string): Promise<boolean> {
         const branches = await gitRestClient.getRefs(repositoryId, project, `heads/${branchName}`);
         return branches.find((x) => x.name == `refs/heads/${branchName}`) !== undefined;
     }
 
-    private async getBranchName(workItemId: number, project: string): Promise<string> {
-        const workItemTrackingRestClient = getClient(WorkItemTrackingRestClient);
+    private async getBranchName(workItemTrackingRestClient: WorkItemTrackingRestClient, workItemId: number, project: string): Promise<string> {
         const workItem = await workItemTrackingRestClient.getWorkItem(workItemId, project, undefined, undefined, WorkItemExpand.Fields);
         const workItemType = workItem.fields["System.WorkItemType"];
 

@@ -27,7 +27,7 @@ function createBranchFromWorkItem() {
             const repositories = await gitRestClient.getRepositories(project.name);
             if (repositories.length === 1) {
                 getWorkItemIds(actionContext).forEach((id: number) => {
-                    branchCreator.createBranch(id, repositories[0].id, repositories[0].name, project.name, gitBaseUrl);
+                    branchCreator.createBranch(id, repositories[0].id, repositories[0].name, project, gitBaseUrl);
                 });
             }
             else {
@@ -41,7 +41,7 @@ function createBranchFromWorkItem() {
                     onClose: (result: ISelectRepositoryResult | undefined) => {
                         if (result !== undefined && result.repositoryId !== undefined && result.repositoryName !== undefined) {
                             getWorkItemIds(actionContext).forEach((id: number) => {
-                                branchCreator.createBranch(id, result.repositoryId!, result.repositoryName!, project.name, gitBaseUrl);
+                                branchCreator.createBranch(id, result.repositoryId!, result.repositoryName!, project, gitBaseUrl);
                             });
                         }
                     }
