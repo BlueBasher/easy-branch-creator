@@ -35,7 +35,9 @@ jobs:
         run: npm install -g tfx-cli
 
       - name: Npm compile
-        run: npm run compile
+        run: |
+          export NODE_OPTIONS="--openssl-legacy-provider"
+          npm run compile
 
       - name: Tfx Package Test
         run: "tfx extension create --manifest-globs vss-extension.json --overrides-file configs/test.json --override '{\"version\": \"${{ steps.gitversion.outputs.semVer }}.${{ github.run_number }}\"}' --output-path out"
