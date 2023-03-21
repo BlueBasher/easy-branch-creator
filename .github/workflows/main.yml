@@ -36,7 +36,7 @@ jobs:
 
       - name: Npm compile
         run: |
-          set ENV NODE_OPTIONS="--openssl-legacy-provider"
+          export NODE_OPTIONS="--openssl-legacy-provider"
           npm run compile
 
       - name: Tfx Package Test
