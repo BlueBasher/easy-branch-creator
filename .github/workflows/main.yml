@@ -28,9 +28,6 @@ jobs:
           useConfigFile: true
           configFilePath: 'git-version.yml'
 
-      - name: Npm set openssl legacy provider
-        run: set ENV NODE_OPTIONS="--openssl-legacy-provider"
-
       - name: Npm install
         run: npm install
 
@@ -38,7 +35,9 @@ jobs:
         run: npm install -g tfx-cli
 
       - name: Npm compile
-        run: npm run compile
+        run: |
+          set ENV NODE_OPTIONS="--openssl-legacy-provider"
+          npm run compile
 
       - name: Tfx Package Test
         run: "tfx extension create --manifest-globs vss-extension.json --overrides-file configs/test.json --override '{\"version\": \"${{ steps.gitversion.outputs.semVer }}.${{ github.run_number }}\"}' --output-path out"
