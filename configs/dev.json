@@ -2,6 +2,6 @@
   "name": "Easy Branch Creator Dev",
   "id": "bluebasher-easy-branch-creator-dev",
   "baseUri": "https://localhost:3000",
-  "version": "0.0.0.5",
+  "version": "0.0.0.7",
   "public": false
 }

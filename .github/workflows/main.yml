@@ -28,6 +28,9 @@ jobs:
           useConfigFile: true
           configFilePath: 'git-version.yml'
 
+      - name: Npm set openssl legacy provider
+        run: set ENV NODE_OPTIONS="--openssl-legacy-provider"
+
       - name: Npm install
         run: npm install
 
