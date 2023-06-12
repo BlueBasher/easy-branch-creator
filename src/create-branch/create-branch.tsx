@@ -32,15 +32,17 @@ function createBranchFromWorkItem() {
             }
             else {
                 const dialogService = await SDK.getService<IHostPageLayoutService>(CommonServiceIds.HostPageLayoutService);
+                const workItems = getWorkItemIds(actionContext);
                 dialogService.openCustomDialog<ISelectRepositoryResult | undefined>(SDK.getExtensionContext().id + ".select-repository", {
                     title: "Select Repository",
                     lightDismiss: false,
                     configuration: {
-                        projectName: project.name
+                        projectName: project.name,
+                        workItems: workItems
                     },
                     onClose: (result: ISelectRepositoryResult | undefined) => {
                         if (result !== undefined && result.repositoryId !== undefined && result.repositoryName !== undefined) {
-                            getWorkItemIds(actionContext).forEach((id: number) => {
+                            workItems.forEach((id: number) => {
                                 branchCreator.createBranch(id, result.repositoryId!, result.repositoryName!, project, gitBaseUrl);
                             });
                         }

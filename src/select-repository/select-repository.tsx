@@ -14,6 +14,8 @@ import { ObservableArray } from "azure-devops-ui/Core/Observable";
 import { IListBoxItem } from "azure-devops-ui/ListBox";
 import { ITableColumn, SimpleTableCell } from "azure-devops-ui/Table";
 import { Icon } from "azure-devops-ui/Icon";
+import { WorkItemTrackingRestClient } from "azure-devops-extension-api/WorkItemTracking";
+import { BranchCreator } from "../branch-creator";
 
 export interface ISelectRepositoryResult {
     repositoryName?: string;
@@ -22,8 +24,10 @@ export interface ISelectRepositoryResult {
 
 interface ISelectRepositoryState {
     projectName?: string;
+    workItems: number[];
     selectedValue?: string;
     ready: boolean;
+    branchNames: string[];
 }
 
 class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
@@ -32,7 +36,7 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
 
     constructor(props: {}) {
         super(props);
-        this.state = { ready: false };
+        this.state = { workItems: [], branchNames: [], ready: false };
     }
 
     public componentDidMount() {
@@ -40,13 +44,14 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
 
         SDK.ready().then(async () => {
             const config = SDK.getConfiguration();
-            this.setState({ projectName: config.projectName, selectedValue: config.initialValue, ready: false });
+            this.setState({ projectName: config.projectName, workItems: config.workItems, selectedValue: config.initialValue, ready: false, branchNames: [] });
 
             if (config.dialog) {
                 SDK.resize();
             }
 
             await this.loadRepositories();
+            await this.setBranchNames();
         });
     }
 
@@ -81,6 +86,14 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
                         );
                     }}
                 />
+                <div className="branchNames">
+                    <p>Branch Name:</p>
+                    <div>
+                        <ul>
+                            {this.state.branchNames.map(b => <li key={b}>{b}</li>)}
+                        </ul>
+                    </div>
+                </div>
                 <ButtonGroup className="select-repository-button-bar">
                     <Button
                         disabled={!this.state.selectedValue}
@@ -129,7 +142,24 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
         this.setState(prevState => ({
             ...prevState,
             selectedValue: repositoryId
-        }))
+        }));
+    }
+
+    private async setBranchNames() {
+        if (this.state.projectName) {
+            const workItemTrackingRestClient = getClient(WorkItemTrackingRestClient);        
+            const branchCreator = new BranchCreator();
+            let branchNames: string[] = [];
+            for await (const workItemId of this.state.workItems) {
+                const branchName = await branchCreator.getBranchName(workItemTrackingRestClient, workItemId, this.state.projectName!);
+                branchNames.push(branchName);
+            }
+            
+            this.setState(prevState => ({
+                ...prevState,
+                branchNames: branchNames
+            }));
+        }
     }
 }
 

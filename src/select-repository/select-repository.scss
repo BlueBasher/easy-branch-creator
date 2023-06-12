@@ -22,3 +22,18 @@
     display: block;
     text-align: right;
 }
+
+.select-repository .branchNames p {
+    margin-block-start: 10px;
+    margin-block-end: 0px;
+}
+
+.select-repository .branchNames ul {
+    margin-block-start: 4px;
+    margin-block-end: 0px;
+}
+
+.select-repository .branchNames li {
+    list-style-type: disc;
+    list-style-position: inside;
+}
