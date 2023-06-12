@@ -49,6 +49,39 @@ export class BranchCreator {
         navigationService.openNewWindow(branchUrl, "");
     }
 
+    public async getBranchName(workItemTrackingRestClient: WorkItemTrackingRestClient, workItemId: number, project: string): Promise<string> {
+        const workItem = await workItemTrackingRestClient.getWorkItem(workItemId, project, undefined, undefined, WorkItemExpand.Fields);
+        const workItemType = workItem.fields["System.WorkItemType"];
+
+        const storageService = new StorageService();
+        const settingsDocument = await storageService.getSettings();
+
+        let branchNameTemplate = settingsDocument.defaultBranchNameTemplate;
+        if (workItemType in settingsDocument.branchNameTemplates && settingsDocument.branchNameTemplates[workItemType].isActive) {
+            branchNameTemplate = settingsDocument.branchNameTemplates[workItemType].value;
+        }
+
+        const tokenizer = new Tokenizer();
+        const tokens = tokenizer.getTokens(branchNameTemplate);
+
+        let branchName = branchNameTemplate;
+        tokens.forEach((token) => {
+            let workItemFieldValue = workItem.fields[token.replace('${', '').replace('}', '')];
+            if (workItemFieldValue) {
+                if (typeof workItemFieldValue.replace === 'function') {
+                    workItemFieldValue = workItemFieldValue.replace(/[^a-zA-Z0-9]/g, settingsDocument.nonAlphanumericCharactersReplacement);
+                }
+            }
+            branchName = branchName.replace(token, workItemFieldValue);
+        });
+
+        if (settingsDocument.lowercaseBranchName) {
+            branchName = branchName.toLowerCase();
+        }
+
+        return branchName;
+    }
+
     private async createRef(gitRestClient: GitRestClient, repositoryId: string, commitId: string, branchName: string): Promise<void> {
         const gitRefUpdate = {
             name: `refs/heads/${branchName}`,
@@ -83,38 +116,5 @@ export class BranchCreator {
     private async branchExists(gitRestClient: GitRestClient, repositoryId: string, project: string, branchName: string): Promise<boolean> {
         const branches = await gitRestClient.getRefs(repositoryId, project, `heads/${branchName}`);
         return branches.find((x) => x.name == `refs/heads/${branchName}`) !== undefined;
-    }
-
-    private async getBranchName(workItemTrackingRestClient: WorkItemTrackingRestClient, workItemId: number, project: string): Promise<string> {
-        const workItem = await workItemTrackingRestClient.getWorkItem(workItemId, project, undefined, undefined, WorkItemExpand.Fields);
-        const workItemType = workItem.fields["System.WorkItemType"];
-
-        const storageService = new StorageService();
-        const settingsDocument = await storageService.getSettings();
-
-        let branchNameTemplate = settingsDocument.defaultBranchNameTemplate;
-        if (workItemType in settingsDocument.branchNameTemplates && settingsDocument.branchNameTemplates[workItemType].isActive) {
-            branchNameTemplate = settingsDocument.branchNameTemplates[workItemType].value;
-        }
-
-        const tokenizer = new Tokenizer();
-        const tokens = tokenizer.getTokens(branchNameTemplate);
-
-        let branchName = branchNameTemplate;
-        tokens.forEach((token) => {
-            let workItemFieldValue = workItem.fields[token.replace('${', '').replace('}', '')];
-            if (workItemFieldValue) {
-                if (typeof workItemFieldValue.replace === 'function') {
-                    workItemFieldValue = workItemFieldValue.replace(/[^a-zA-Z0-9]/g, settingsDocument.nonAlphanumericCharactersReplacement);
-                }
-            }
-            branchName = branchName.replace(token, workItemFieldValue);
-        });
-
-        if (settingsDocument.lowercaseBranchName) {
-            branchName = branchName.toLowerCase();
-        }
-
-        return branchName;
     }
 }
