@@ -438,7 +438,7 @@ class SettingsHub extends React.Component<{}, ISettingsHubState> {
             workItemStates[workItemType] = { items: new ObservableArray<IListBoxItem<string>>(), selected: new DropdownSelection() };
             workItemStates[workItemType].items.push(...workItemTypeStates.map(x => { return { id: x.name, data: x.name, text: x.name }}));
 
-            const index = workItemTypeStates.findIndex(x => x.name === settingsDocument.workItemState[workItemType].value)
+            const index = settingsDocument.workItemState[workItemType] ? workItemTypeStates.findIndex(x => x.name === settingsDocument.workItemState[workItemType].value) : -1;
             workItemStates[workItemType].selected.select(index >= 0 ? index : 0);    
         }
         return workItemStates;
