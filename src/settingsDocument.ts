@@ -3,6 +3,11 @@ export interface BranchNameTemplate {
     value: string;
 }
 
+export interface WorkItemStateSetting{
+    isActive: boolean;
+    value: string;
+}
+
 export default interface SettingsDocument {
     __etag?: string;
     id: string;
@@ -10,4 +15,6 @@ export default interface SettingsDocument {
     branchNameTemplates: Record<string, BranchNameTemplate>;
     nonAlphanumericCharactersReplacement: string;
     lowercaseBranchName: boolean;
+    updateWorkItemState: boolean;
+    workItemState: Record<string, WorkItemStateSetting>;
 }

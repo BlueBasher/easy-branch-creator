@@ -16,6 +16,7 @@ import { ITableColumn, SimpleTableCell } from "azure-devops-ui/Table";
 import { Icon } from "azure-devops-ui/Icon";
 import { WorkItemTrackingRestClient } from "azure-devops-extension-api/WorkItemTracking";
 import { BranchCreator } from "../branch-creator";
+import { StorageService } from "../storage-service";
 
 export interface ISelectRepositoryResult {
     repositoryName?: string;
@@ -148,10 +149,13 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
     private async setBranchNames() {
         if (this.state.projectName) {
             const workItemTrackingRestClient = getClient(WorkItemTrackingRestClient);        
+            const storageService = new StorageService();
+            const settingsDocument = await storageService.getSettings();
+    
             const branchCreator = new BranchCreator();
             let branchNames: string[] = [];
             for await (const workItemId of this.state.workItems) {
-                const branchName = await branchCreator.getBranchName(workItemTrackingRestClient, workItemId, this.state.projectName!);
+                const branchName = await branchCreator.getBranchName(workItemTrackingRestClient, settingsDocument, workItemId, this.state.projectName!);
                 branchNames.push(branchName);
             }
             

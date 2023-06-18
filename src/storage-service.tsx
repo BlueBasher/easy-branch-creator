@@ -42,7 +42,12 @@ export class StorageService {
             id: this._projectId!
         };
         try {
-            settingsDocument = await dataManager.getDocument(CollectionName, this._projectId!, { scopeType: ScopeType });
+            const settingsDocumentData = await dataManager.getDocument(CollectionName, this._projectId!, { scopeType: ScopeType });
+
+            settingsDocument = {
+                ...Constants.DefaultSettingsDocument,
+                ...settingsDocumentData
+            };
         } catch (error) {
             settingsDocument = await this.setSettings(settingsDocument);
         }
