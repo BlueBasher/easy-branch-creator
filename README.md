@@ -19,6 +19,8 @@ When clicking the actions, `easy-branch-creator` will create a new branch, using
   - Any non-alphanumeric character in a workitem field will be replaced by this character.
 - Lowercase branch name
   - When checked, the entire branch name will be lowercased.
+- Update workitem state
+  - If enabled for a workitem type, when creating a new branch, the workitem is also updated to the selected state.
 
 ![Settings][settings]
 

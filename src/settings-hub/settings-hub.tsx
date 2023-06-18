@@ -34,8 +34,13 @@ interface ISettingsHubState {
     errorMessages: Record<string, string[]>;
     workItemTypes: string[];
     workItemFieldNames: string[];
+    workItemStates: Record<string, IWorkItemStateSelection>;
 }
 
+interface IWorkItemStateSelection {
+    items: ObservableArray<IListBoxItem<string>>;
+    selected: DropdownSelection;
+}
 
 class SettingsHub extends React.Component<{}, ISettingsHubState> {
     private branchNameTemplateValidator = new BranchNameTemplateValidator();
@@ -51,44 +56,57 @@ class SettingsHub extends React.Component<{}, ISettingsHubState> {
                 defaultBranchNameTemplate: "",
                 branchNameTemplates: {},
                 lowercaseBranchName: false,
-                nonAlphanumericCharactersReplacement: ""
+                nonAlphanumericCharactersReplacement: "",
+                updateWorkItemState: false,
+                workItemState: {}
             },
             isReady: false,
             isTemplateInvalid: false,
             defaultBranchNameTemplateErrorMessages: [],
             errorMessages: {},
             workItemTypes: [],
-            workItemFieldNames: []
+            workItemFieldNames: [],
+            workItemStates: {}
         };
     }
 
     public componentDidMount() {
         SDK.init();
         SDK.ready().then(async () => {
-            const storageService = new StorageService();
-            const settingsDocument = await storageService.getSettings();
-            const workItemTypes = await this.getWorkItemTypes();
-            const workItemFieldNames = await this.getWorkItemFieldNames();
+            const projectService = await SDK.getService<IProjectPageService>(CommonServiceIds.ProjectPageService);
+            const project = await projectService.getProject();
+            if (project) {
+                const storageService = new StorageService();
+                const settingsDocument = await storageService.getSettings();
+                const workItemTypes = await this.getWorkItemTypes(project.name);
+                const workItemFieldNames = await this.getWorkItemFieldNames(project.name);
+                const workItemStates = await this.getWorkItemStates(project.name, workItemTypes, settingsDocument);
 
-            workItemTypes.forEach(workItemType => {
-                if (!(workItemType in settingsDocument.branchNameTemplates)) {
-                    settingsDocument.branchNameTemplates[workItemType] = {
-                        isActive: false,
-                        value: Constants.DefaultBranchNameTemplate
-                    };
-                }
-            });
+                workItemTypes.forEach(workItemType => {
+                    if (!(workItemType in settingsDocument.branchNameTemplates)) {
+                        settingsDocument.branchNameTemplates[workItemType] = {
+                            isActive: false,
+                            value: Constants.DefaultBranchNameTemplate
+                        };
+                    }
 
-            this.setState(prevState => ({
-                ...prevState,
-                initialSettingsDocument: settingsDocument,
-                updatedSettingsDocument: settingsDocument,
-                workItemTypes: workItemTypes,
-                workItemFieldNames: workItemFieldNames,
-                isReady: true
-            }))
+                    if (!(workItemType in settingsDocument.workItemState)) {
+                        settingsDocument.workItemState[workItemType] = { isActive: false, value: "" };
+                    }
+                });
 
-            this.loadNonAlphanumericCharactersReplacementSelectionOptions();
+                this.setState(prevState => ({
+                    ...prevState,
+                    initialSettingsDocument: settingsDocument,
+                    updatedSettingsDocument: settingsDocument,
+                    workItemTypes: workItemTypes,
+                    workItemFieldNames: workItemFieldNames,
+                    workItemStates: workItemStates,
+                    isReady: true
+                }))
+
+                this.loadNonAlphanumericCharactersReplacementSelectionOptions();
+            }
         });
     }
 
@@ -198,7 +216,7 @@ class SettingsHub extends React.Component<{}, ISettingsHubState> {
                             </div>
                         </form>
                     </Card>
-                    <Card className="flex-grow">
+                    <Card className="flex-grow margin-bottom-16">
                         <form>
                             <FormItem label="Non-alphanumeric characters replacement">
                                 <Dropdown
@@ -234,6 +252,84 @@ class SettingsHub extends React.Component<{}, ISettingsHubState> {
                                     }}
                                 />
                             </FormItem>
+                        </form>
+                    </Card>
+                    <Card className="flex-grow">
+                        <form>
+                            <FormItem className="margin-top-8 margin-bottom-8">
+                                <Checkbox
+                                    label="Update workitem state"
+                                    checked={this.state.updatedSettingsDocument.updateWorkItemState}
+                                    disabled={!this.state.isReady}
+                                    onChange={(event, checked) => {
+                                        this.setState(prevState => ({
+                                            ...prevState,
+                                            updatedSettingsDocument: {
+                                                ...prevState.updatedSettingsDocument,
+                                                updateWorkItemState: checked,
+                                            }
+                                        }))
+                                    }}
+                                />
+                            </FormItem>
+                            <div className="margin-left-16">
+                            {
+                                this.state.workItemTypes.map(workItemType => {
+                                    if (this.state.updatedSettingsDocument.updateWorkItemState) {
+                                        return (
+                                            <FormItem
+                                                key={workItemType}
+                                                className="margin-bottom-8">
+                                                <Checkbox
+                                                    label={workItemType}
+                                                    checked={this.state.updatedSettingsDocument.workItemState[workItemType].isActive}
+                                                    disabled={!this.state.isReady}
+                                                    onChange={(event, checked) => {
+                                                        this.setState(prevState => ({
+                                                            ...prevState,
+                                                            updatedSettingsDocument: {
+                                                                ...prevState.updatedSettingsDocument,
+                                                                workItemState: {
+                                                                    ...prevState.updatedSettingsDocument.workItemState,
+                                                                    [workItemType]: {
+                                                                        ...prevState.updatedSettingsDocument.workItemState[workItemType],
+                                                                        isActive: checked
+                                                                    }
+                                                                }
+                                                            },
+                                                        }))
+                                                    }}
+                                                />
+                                                {this.state.updatedSettingsDocument.workItemState[workItemType].isActive ?
+                                                    <Dropdown
+                                                        ariaLabel="WorkItem State"
+                                                        placeholder="Select an Option"
+                                                        disabled={!this.state.isReady}
+                                                        items={this.state.workItemStates[workItemType].items}
+                                                        selection={this.state.workItemStates[workItemType].selected}
+                                                        onSelect={(event: React.SyntheticEvent<HTMLElement>, item: IListBoxItem<string>) => {
+                                                            this.setState(prevState => ({
+                                                                ...prevState,
+                                                                updatedSettingsDocument: {
+                                                                    ...prevState.updatedSettingsDocument,
+                                                                    workItemState: {
+                                                                        ...prevState.updatedSettingsDocument.workItemState,
+                                                                        [workItemType]: {
+                                                                            ...prevState.updatedSettingsDocument.workItemState[workItemType],
+                                                                            value: item.id
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }))
+                                                        }}
+                                                    />
+                                                : null}
+                                            </FormItem>
+                                        )
+                                    }
+                                })
+                            }
+                            </div>
                         </form>
                     </Card>
                 </div>
@@ -280,7 +376,8 @@ class SettingsHub extends React.Component<{}, ISettingsHubState> {
 
         if (initialSettingsDocument.defaultBranchNameTemplate !== updatedSettingsDocument.defaultBranchNameTemplate ||
             initialSettingsDocument.lowercaseBranchName !== updatedSettingsDocument.lowercaseBranchName ||
-            initialSettingsDocument.nonAlphanumericCharactersReplacement !== updatedSettingsDocument.nonAlphanumericCharactersReplacement) {
+            initialSettingsDocument.nonAlphanumericCharactersReplacement !== updatedSettingsDocument.nonAlphanumericCharactersReplacement ||
+            initialSettingsDocument.updateWorkItemState !== updatedSettingsDocument.updateWorkItemState) {
             return false;
         }
 
@@ -288,6 +385,14 @@ class SettingsHub extends React.Component<{}, ISettingsHubState> {
             if (!(workItemType in updatedSettingsDocument.branchNameTemplates) ||
                 updatedSettingsDocument.branchNameTemplates[workItemType].isActive !== initialSettingsDocument.branchNameTemplates[workItemType].isActive ||
                 updatedSettingsDocument.branchNameTemplates[workItemType].value !== initialSettingsDocument.branchNameTemplates[workItemType].value) {
+                return false;
+            }
+        };
+
+        for (const workItemType in initialSettingsDocument.workItemState) {
+            if (!(workItemType in updatedSettingsDocument.workItemState) ||
+                updatedSettingsDocument.workItemState[workItemType].isActive !== initialSettingsDocument.workItemState[workItemType].isActive ||
+                updatedSettingsDocument.workItemState[workItemType].value !== initialSettingsDocument.workItemState[workItemType].value) {
                 return false;
             }
         };
@@ -302,36 +407,41 @@ class SettingsHub extends React.Component<{}, ISettingsHubState> {
         this.nonAlphanumericCharactersReplacementSelection.select(index >= 0 ? index : 0);
     }
 
-    private async getWorkItemTypes(): Promise<string[]> {
-        const projectService = await SDK.getService<IProjectPageService>(CommonServiceIds.ProjectPageService);
-        const project = await projectService.getProject();
-        if (project) {
-            const workItemTrackingRestClient = getClient(WorkItemTrackingRestClient);
-            const workItemTypeCategories = await workItemTrackingRestClient.getWorkItemTypeCategories(project.name);
-            const hiddenCategories = workItemTypeCategories.find(x => x.referenceName === "Microsoft.HiddenCategory");
-            if (hiddenCategories) {
-                return workItemTypeCategories
-                    .map(x => x.workItemTypes)
-                    .reduce(function (a, b) { return a.concat(b); }, [])
-                    .filter(x => hiddenCategories.workItemTypes.findIndex(t => t.name === x.name) === -1)
-                    .map((x) => x.name)
-                    .sort();
-            }
+    private async getWorkItemTypes(projectName: string): Promise<string[]> {
+        const workItemTrackingRestClient = getClient(WorkItemTrackingRestClient);
+        const workItemTypeCategories = await workItemTrackingRestClient.getWorkItemTypeCategories(projectName);
+        const hiddenCategories = workItemTypeCategories.find(x => x.referenceName === "Microsoft.HiddenCategory");
+        if (hiddenCategories) {
+            return workItemTypeCategories
+                .map(x => x.workItemTypes)
+                .reduce(function (a, b) { return a.concat(b); }, [])
+                .filter(x => hiddenCategories.workItemTypes.findIndex(t => t.name === x.name) === -1)
+                .map((x) => x.name)
+                .sort();
         }
 
         return [];
     }
 
-    private async getWorkItemFieldNames(): Promise<string[]> {
-        const projectService = await SDK.getService<IProjectPageService>(CommonServiceIds.ProjectPageService);
-        const project = await projectService.getProject();
+    private async getWorkItemFieldNames(projectName: string): Promise<string[]> {
         const workItemTrackingRestClient = getClient(WorkItemTrackingRestClient);
-        if (project) {
-            const workItemFields = await workItemTrackingRestClient.getFields(project.name, GetFieldsExpand.ExtensionFields);
-            return workItemFields.map((x) => x.referenceName);
-        }
+        const workItemFields = await workItemTrackingRestClient.getFields(projectName, GetFieldsExpand.ExtensionFields);
+        return workItemFields.map((x) => x.referenceName);
+    }
 
-        return [];
+    private async getWorkItemStates(projectName: string, workItemTypes: string[], settingsDocument: SettingsDocument): Promise<Record<string, IWorkItemStateSelection>> {
+        const workItemTrackingRestClient = getClient(WorkItemTrackingRestClient);
+        let workItemStates: Record<string, IWorkItemStateSelection> = {};
+        for await (const workItemType of workItemTypes)
+        {
+            const workItemTypeStates = await workItemTrackingRestClient.getWorkItemTypeStates(projectName, workItemType);
+            workItemStates[workItemType] = { items: new ObservableArray<IListBoxItem<string>>(), selected: new DropdownSelection() };
+            workItemStates[workItemType].items.push(...workItemTypeStates.map(x => { return { id: x.name, data: x.name, text: x.name }}));
+
+            const index = workItemTypeStates.findIndex(x => x.name === settingsDocument.workItemState[workItemType].value)
+            workItemStates[workItemType].selected.select(index >= 0 ? index : 0);    
+        }
+        return workItemStates;
     }
 
     private async save() {

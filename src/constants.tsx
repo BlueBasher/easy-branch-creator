@@ -8,7 +8,9 @@ export class Constants {
         branchNameTemplates: {},
         nonAlphanumericCharactersReplacement: "_",
         lowercaseBranchName: false,
-        id: ""
+        id: "",
+        updateWorkItemState: false,
+        workItemState: {}
     };
 
     public static NonAlphanumericCharactersReplacementSelectionOptions = [

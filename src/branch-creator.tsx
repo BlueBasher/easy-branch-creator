@@ -5,6 +5,7 @@ import { GitRestClient } from "azure-devops-extension-api/Git";
 import { StorageService } from "./storage-service";
 import { Tokenizer } from "./tokenizer";
 import { JsonPatchOperation, Operation } from "azure-devops-extension-api/WebApi";
+import SettingsDocument from "./settingsDocument";
 
 export class BranchCreator {
 
@@ -13,8 +14,10 @@ export class BranchCreator {
         const globalMessagesSvc = await SDK.getService<IGlobalMessagesService>(CommonServiceIds.GlobalMessagesService);
         const gitRestClient = getClient(GitRestClient);
         const workItemTrackingRestClient = getClient(WorkItemTrackingRestClient);
+        const storageService = new StorageService();
+        const settingsDocument = await storageService.getSettings();
 
-        const branchName = await this.getBranchName(workItemTrackingRestClient, workItemId, project.name);
+        const branchName = await this.getBranchName(workItemTrackingRestClient, settingsDocument, workItemId, project.name);
         const branchUrl = `${gitBaseUrl}/${repositoryName}?version=GB${encodeURI(branchName)}`;
 
         if (await this.branchExists(gitRestClient, repositoryId, project.name, branchName)) {
@@ -39,6 +42,7 @@ export class BranchCreator {
 
         await this.createRef(gitRestClient, repositoryId, defaultBranch.commit.commitId, branchName);
         await this.linkBranchToWorkItem(workItemTrackingRestClient, project.id, repositoryId, workItemId, branchName);
+        await this.updateWorkItemState(workItemTrackingRestClient, settingsDocument, project.id, workItemId);
         console.log(`Branch ${branchName} created in repository ${repositoryName}`);
 
         globalMessagesSvc.addToast({
@@ -49,12 +53,9 @@ export class BranchCreator {
         navigationService.openNewWindow(branchUrl, "");
     }
 
-    public async getBranchName(workItemTrackingRestClient: WorkItemTrackingRestClient, workItemId: number, project: string): Promise<string> {
+    public async getBranchName(workItemTrackingRestClient: WorkItemTrackingRestClient, settingsDocument: SettingsDocument, workItemId: number, project: string): Promise<string> {
         const workItem = await workItemTrackingRestClient.getWorkItem(workItemId, project, undefined, undefined, WorkItemExpand.Fields);
         const workItemType = workItem.fields["System.WorkItemType"];
-
-        const storageService = new StorageService();
-        const settingsDocument = await storageService.getSettings();
 
         let branchNameTemplate = settingsDocument.defaultBranchNameTemplate;
         if (workItemType in settingsDocument.branchNameTemplates && settingsDocument.branchNameTemplates[workItemType].isActive) {
@@ -116,5 +117,28 @@ export class BranchCreator {
     private async branchExists(gitRestClient: GitRestClient, repositoryId: string, project: string, branchName: string): Promise<boolean> {
         const branches = await gitRestClient.getRefs(repositoryId, project, `heads/${branchName}`);
         return branches.find((x) => x.name == `refs/heads/${branchName}`) !== undefined;
+    }
+
+    private async updateWorkItemState(workItemTrackingRestClient: WorkItemTrackingRestClient, settingsDocument: SettingsDocument, projectId: string, workItemId: number) {
+        try {
+            if (settingsDocument.updateWorkItemState) {
+                const workItem = await workItemTrackingRestClient.getWorkItem(workItemId, projectId);
+                const workItemType = workItem.fields["System.WorkItemType"];
+                if (workItemType in settingsDocument.workItemState && settingsDocument.workItemState[workItemType].isActive) {
+                    const newState = settingsDocument.workItemState[workItemType].value;
+                    const document: JsonPatchOperation[] = [
+                        {
+                            from: "",
+                            op: Operation.Add,
+                            path: "/fields/System.State",
+                            value: newState
+                        }
+                    ];
+                    await workItemTrackingRestClient.updateWorkItem(document, workItemId);
+                }
+            }
+        } catch (error) {
+            console.warn("Update WorkItem State failed", error);
+        }
     }
 }
