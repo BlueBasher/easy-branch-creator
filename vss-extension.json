@@ -81,11 +81,11 @@
       }
     },
     {
-      "id": "select-repository",
+      "id": "select-branch-details",
       "type": "ms.vss-web.external-content",
-      "description": "The content to be displayed in the dialog",
+      "description": "The details for the branch to create",
       "properties": {
-        "uri": "dist/select-repository/select-repository.html"
+        "uri": "dist/select-branch-details/select-branch-details.html"
       }
     },
     {

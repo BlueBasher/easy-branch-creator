@@ -1,4 +1,4 @@
-import "./select-repository.scss";
+import "./select-branch-details.scss";
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
@@ -18,22 +18,22 @@ import { WorkItemTrackingRestClient } from "azure-devops-extension-api/WorkItemT
 import { BranchCreator } from "../branch-creator";
 import { StorageService } from "../storage-service";
 
-export interface ISelectRepositoryResult {
+export interface ISelectBranchDetailsResult {
     repositoryName?: string;
     repositoryId?: string;
 }
 
-interface ISelectRepositoryState {
+interface ISelectBranchDetailsState {
     projectName?: string;
     workItems: number[];
-    selectedValue?: string;
+    selectedRepositoryId?: string;
     ready: boolean;
     branchNames: string[];
 }
 
-class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
+class SelectBranchDetailsForm extends React.Component<{}, ISelectBranchDetailsState> {
     private repositories = new ObservableArray<IListBoxItem<string>>();
-    private selection = new DropdownSelection();
+    private repositorySelection = new DropdownSelection();
 
     constructor(props: {}) {
         super(props);
@@ -45,7 +45,7 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
 
         SDK.ready().then(async () => {
             const config = SDK.getConfiguration();
-            this.setState({ projectName: config.projectName, workItems: config.workItems, selectedValue: config.initialValue, ready: false, branchNames: [] });
+            this.setState({ projectName: config.projectName, workItems: config.workItems, selectedRepositoryId: config.initialValue, ready: false, branchNames: [] });
 
             if (config.dialog) {
                 SDK.resize();
@@ -53,18 +53,25 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
 
             await this.loadRepositories();
             await this.setBranchNames();
+
+            this.setState(prevState => ({
+                ...prevState,
+                ready: true
+            }));
         });
     }
 
     public render(): JSX.Element {
         return (
-            <div className="select-repository flex-column flex-grow">
+            <div className="select-branch-details flex-column flex-grow">
+                {this.repositories.length > 1
+                ?
                 <EditableDropdown<string>
                     disabled={!this.state.ready}
                     items={this.repositories}
-                    selection={this.selection}
+                    selection={this.repositorySelection}
                     onValueChange={(item?: IListBoxItem<string>) => {
-                        this.setSelectedValue(item?.data);
+                        this.setSelectedRepositoryId(item?.data);
                     }}
                     renderItem={(rowIndex: number, columnIndex: number, tableColumn: ITableColumn<IListBoxItem<string>>, tableItem: IListBoxItem<string>) => {
                         return (
@@ -87,6 +94,8 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
                         );
                     }}
                 />
+                : null
+                }
                 <div className="branchNames">
                     <p>Branch Name:</p>
                     <div>
@@ -95,12 +104,12 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
                         </ul>
                     </div>
                 </div>
-                <ButtonGroup className="select-repository-button-bar">
+                <ButtonGroup className="select-branch-details-button-bar">
                     <Button
-                        disabled={!this.state.selectedValue}
+                        disabled={!this.state.selectedRepositoryId}
                         primary={true}
                         text="Create Branch"
-                        onClick={() => this.close(this.state.selectedValue)}
+                        onClick={() => this.close(this.state.selectedRepositoryId)}
                     />
                     <Button
                         text="Cancel"
@@ -112,7 +121,7 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
     }
 
     private close(repositoryId: string | undefined) {
-        const result: ISelectRepositoryResult = {
+        const result: ISelectBranchDetailsResult = {
             repositoryId: repositoryId,
             repositoryName: repositoryId ? this.repositories.value.find((x) => x.id === repositoryId)?.text : undefined
         };
@@ -128,21 +137,16 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
         const repositories = await gitRestClient.getRepositories(this.state.projectName);
         this.repositories.push(...repositories.map(t => { return { id: t.id, data: t.id, text: t.name } }));
 
-        if (!!!this.state.selectedValue && this.repositories.length > 0) {
-            this.setSelectedValue(repositories[0].id);
-            this.selection.select(0);
+        if (!!!this.state.selectedRepositoryId && this.repositories.length > 0) {
+            this.setSelectedRepositoryId(repositories[0].id);
+            this.repositorySelection.select(0);
         }
-
-        this.setState(prevState => ({
-            ...prevState,
-            ready: true
-        }))
     }
 
-    private setSelectedValue(repositoryId?: string) {
+    private setSelectedRepositoryId(repositoryId?: string) {
         this.setState(prevState => ({
             ...prevState,
-            selectedValue: repositoryId
+            selectedRepositoryId: repositoryId
         }));
     }
 
@@ -167,4 +171,4 @@ class SelectRepositoryForm extends React.Component<{}, ISelectRepositoryState> {
     }
 }
 
-ReactDOM.render(<SelectRepositoryForm />, document.getElementById("root"));
+ReactDOM.render(<SelectBranchDetailsForm />, document.getElementById("root"));

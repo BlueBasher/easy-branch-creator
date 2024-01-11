@@ -1,10 +1,9 @@
 import * as SDK from "azure-devops-extension-sdk";
-import { getClient, ILocationService, CommonServiceIds, IProjectPageService, IProjectInfo, IHostPageLayoutService } from "azure-devops-extension-api";
+import { ILocationService, CommonServiceIds, IProjectPageService, IProjectInfo, IHostPageLayoutService } from "azure-devops-extension-api";
 import { CoreRestClient } from "azure-devops-extension-api/Core";
-import { GitRestClient } from "azure-devops-extension-api/Git";
 
 import { BranchCreator } from "../branch-creator";
-import { ISelectRepositoryResult } from "../select-repository/select-repository";
+import { ISelectBranchDetailsResult } from "../select-branch-details/select-branch-details";
 
 function createBranchFromWorkItem() {
     "use strict";
@@ -23,32 +22,23 @@ function createBranchFromWorkItem() {
             const gitBaseUrl = `${hostBaseUrl}${(hostBaseUrl.toLowerCase().indexOf(host.name.toLowerCase()) == -1 ? `${host.name}/` : "")}${project.name}/_git`;
 
             const branchCreator = new BranchCreator();
-            const gitRestClient = getClient(GitRestClient);
-            const repositories = await gitRestClient.getRepositories(project.name);
-            if (repositories.length === 1) {
-                getWorkItemIds(actionContext).forEach((id: number) => {
-                    branchCreator.createBranch(id, repositories[0].id, repositories[0].name, project, gitBaseUrl);
-                });
-            }
-            else {
-                const dialogService = await SDK.getService<IHostPageLayoutService>(CommonServiceIds.HostPageLayoutService);
-                const workItems = getWorkItemIds(actionContext);
-                dialogService.openCustomDialog<ISelectRepositoryResult | undefined>(SDK.getExtensionContext().id + ".select-repository", {
-                    title: "Select Repository",
-                    lightDismiss: false,
-                    configuration: {
-                        projectName: project.name,
-                        workItems: workItems
-                    },
-                    onClose: (result: ISelectRepositoryResult | undefined) => {
-                        if (result !== undefined && result.repositoryId !== undefined && result.repositoryName !== undefined) {
-                            workItems.forEach((id: number) => {
-                                branchCreator.createBranch(id, result.repositoryId!, result.repositoryName!, project, gitBaseUrl);
-                            });
-                        }
+            const dialogService = await SDK.getService<IHostPageLayoutService>(CommonServiceIds.HostPageLayoutService);
+            const workItems = getWorkItemIds(actionContext);
+            dialogService.openCustomDialog<ISelectBranchDetailsResult | undefined>(SDK.getExtensionContext().id + ".select-branch-details", {
+                title: "Select Branch Details",
+                lightDismiss: false,
+                configuration: {
+                    projectName: project.name,
+                    workItems: workItems
+                },
+                onClose: (result: ISelectBranchDetailsResult | undefined) => {
+                    if (result !== undefined && result.repositoryId !== undefined && result.repositoryName !== undefined) {
+                        workItems.forEach((id: number) => {
+                            branchCreator.createBranch(id, result.repositoryId!, result.repositoryName!, project, gitBaseUrl);
+                        });
                     }
-                });
-            }
+                }
+            });
         }
     }
 };
