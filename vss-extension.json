@@ -81,11 +81,11 @@
       }
     },
     {
-      "id": "select-branch-details",
+      "id": "branch-details-form",
       "type": "ms.vss-web.external-content",
       "description": "The details for the branch to create",
       "properties": {
-        "uri": "dist/select-branch-details/select-branch-details.html"
+        "uri": "dist/branch-details-form/branch-details-form.html"
       }
     },
     {

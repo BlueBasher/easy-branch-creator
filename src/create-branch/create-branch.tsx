@@ -3,7 +3,7 @@ import { ILocationService, CommonServiceIds, IProjectPageService, IProjectInfo, 
 import { CoreRestClient } from "azure-devops-extension-api/Core";
 
 import { BranchCreator } from "../branch-creator";
-import { ISelectBranchDetailsResult } from "../select-branch-details/select-branch-details";
+import { ISelectBranchDetailsResult } from "../branch-details-form/branch-details-form";
 
 function createBranchFromWorkItem() {
     "use strict";
@@ -24,7 +24,7 @@ function createBranchFromWorkItem() {
             const branchCreator = new BranchCreator();
             const dialogService = await SDK.getService<IHostPageLayoutService>(CommonServiceIds.HostPageLayoutService);
             const workItems = getWorkItemIds(actionContext);
-            dialogService.openCustomDialog<ISelectBranchDetailsResult | undefined>(SDK.getExtensionContext().id + ".select-branch-details", {
+            dialogService.openCustomDialog<ISelectBranchDetailsResult | undefined>(SDK.getExtensionContext().id + ".branch-details-form", {
                 title: "Select Branch Details",
                 lightDismiss: false,
                 configuration: {
@@ -32,9 +32,9 @@ function createBranchFromWorkItem() {
                     workItems: workItems
                 },
                 onClose: (result: ISelectBranchDetailsResult | undefined) => {
-                    if (result !== undefined && result.repositoryId !== undefined && result.repositoryName !== undefined) {
+                    if (result !== undefined) {
                         workItems.forEach((id: number) => {
-                            branchCreator.createBranch(id, result.repositoryId!, result.repositoryName!, project, gitBaseUrl);
+                            branchCreator.createBranch(id, result.repositoryId, result.sourceBranchName, project, gitBaseUrl);
                         });
                     }
                 }
