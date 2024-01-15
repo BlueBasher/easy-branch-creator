@@ -1,0 +1,35 @@
+@import "node_modules/azure-devops-ui/Core/_platformCommon.scss";
+
+
+#root {
+    height: 100%;
+    width: 100%;
+    display: flex;
+}
+
+.branch-details-form {
+    font-size: $fontSizeM;
+}
+
+.ms-Icon--GitLogo {
+    color: rgb(240, 81, 41);
+    margin-right: 4px;
+}
+
+.ms-Icon--BranchMerge {
+    margin-right: 4px;
+}
+
+.branch-details-form .branchNames  {
+    height: 60px;
+}
+
+.branch-details-form .branchNames ul {
+    margin-block-start: 0px;
+    margin-block-end: 0px;
+}
+
+.branch-details-form .branchNames li {
+    list-style-type: disc;
+    list-style-position: inside;
+}

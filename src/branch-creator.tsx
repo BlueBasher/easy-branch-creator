@@ -9,7 +9,7 @@ import SettingsDocument from "./settingsDocument";
 
 export class BranchCreator {
 
-    public async createBranch(workItemId: number, repositoryId: string, repositoryName: string, project: IProjectInfo, gitBaseUrl: string): Promise<void> {
+    public async createBranch(workItemId: number, repositoryId: string, sourceBranchName: string, project: IProjectInfo, gitBaseUrl: string): Promise<void> {
         const navigationService = await SDK.getService<IHostNavigationService>(CommonServiceIds.HostNavigationService);
         const globalMessagesSvc = await SDK.getService<IGlobalMessagesService>(CommonServiceIds.GlobalMessagesService);
         const gitRestClient = getClient(GitRestClient);
@@ -17,11 +17,13 @@ export class BranchCreator {
         const storageService = new StorageService();
         const settingsDocument = await storageService.getSettings();
 
+        const repository = await gitRestClient.getRepository(repositoryId, project.name);
+
         const branchName = await this.getBranchName(workItemTrackingRestClient, settingsDocument, workItemId, project.name);
-        const branchUrl = `${gitBaseUrl}/${repositoryName}?version=GB${encodeURI(branchName)}`;
+        const branchUrl = `${gitBaseUrl}/${repository.name}?version=GB${encodeURI(branchName)}`;
 
         if (await this.branchExists(gitRestClient, repositoryId, project.name, branchName)) {
-            console.info(`Branch ${branchName} aready exists in repository ${repositoryName}`);
+            console.info(`Branch ${branchName} aready exists in repository ${repository.name}`);
 
             globalMessagesSvc.addToast({
                 duration: 3000,
@@ -34,16 +36,16 @@ export class BranchCreator {
             return;
         }
 
-        const defaultBranch = (await gitRestClient.getBranches(repositoryId, project.name)).find((x) => x.isBaseVersion);
-        if (!defaultBranch) {
-            console.warn(`Default branch ${branchName} not found`);
+        const branch = (await gitRestClient.getBranches(repositoryId, project.name)).find((x) => x.name === sourceBranchName);
+        if (!branch) {
+            console.warn(`Branch ${sourceBranchName} not found`);
             return;
         }
 
-        await this.createRef(gitRestClient, repositoryId, defaultBranch.commit.commitId, branchName);
+        await this.createRef(gitRestClient, repositoryId, branch.commit.commitId, branchName);
         await this.linkBranchToWorkItem(workItemTrackingRestClient, project.id, repositoryId, workItemId, branchName);
         await this.updateWorkItemState(workItemTrackingRestClient, settingsDocument, project.id, workItemId);
-        console.log(`Branch ${branchName} created in repository ${repositoryName}`);
+        console.log(`Branch ${branchName} created in repository ${repository.name}`);
 
         globalMessagesSvc.addToast({
             duration: 3000,
