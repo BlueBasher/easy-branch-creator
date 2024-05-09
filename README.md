@@ -12,7 +12,7 @@ When clicking the actions, `easy-branch-creator` will create a new branch, using
 ![Create Branch Screen Shot][create-branch-action]
 
 ### Settings
-`easy-branch-creator` can be configured in several ways.
+`easy-branch-creator` can be configured in several ways. The settings can be found in `Project Settings` under the `Extensions` section. 
 - Template Branch Name
   - This is the template being used to create the branch name. The template can use **any** field from a workitem. Validation is in place to ensure a valid template is entered.
 - Non-alphanumeric characters replacement
