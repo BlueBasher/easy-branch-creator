@@ -19,7 +19,7 @@ export class BranchCreator {
 
         const repository = await gitRestClient.getRepository(repositoryId, project.name);
 
-        const branchName = await this.getBranchName(workItemTrackingRestClient, settingsDocument, workItemId, project.name);
+        const branchName = await this.getBranchName(workItemTrackingRestClient, settingsDocument, workItemId, project.name, sourceBranchName);
         const branchUrl = `${gitBaseUrl}/${repository.name}?version=GB${encodeURI(branchName)}`;
 
         if (await this.branchExists(gitRestClient, repositoryId, project.name, branchName)) {
@@ -55,7 +55,7 @@ export class BranchCreator {
         navigationService.openNewWindow(branchUrl, "");
     }
 
-    public async getBranchName(workItemTrackingRestClient: WorkItemTrackingRestClient, settingsDocument: SettingsDocument, workItemId: number, project: string): Promise<string> {
+    public async getBranchName(workItemTrackingRestClient: WorkItemTrackingRestClient, settingsDocument: SettingsDocument, workItemId: number, project: string, sourceBranchName: string): Promise<string> {
         const workItem = await workItemTrackingRestClient.getWorkItem(workItemId, project, undefined, undefined, WorkItemExpand.Fields);
         const workItemType = workItem.fields["System.WorkItemType"];
 
@@ -69,7 +69,18 @@ export class BranchCreator {
 
         let branchName = branchNameTemplate;
         tokens.forEach((token) => {
-            let workItemFieldValue = workItem.fields[token.replace('${', '').replace('}', '')];
+            let workItemFieldName = token.replace('${', '').replace('}', '');
+            let workItemFieldValue = ""
+            if (workItemFieldName == "SourceBranchName") {
+                workItemFieldValue = sourceBranchName
+            }
+            else if (workItemFieldName == "SourceBranchNameTail") {
+                workItemFieldValue = sourceBranchName.replace(/.+\//, "")
+            }
+            else {
+                workItemFieldValue = workItem.fields[workItemFieldName];
+            }
+
             if (workItemFieldValue) {
                 if (typeof workItemFieldValue.replace === 'function') {
                     workItemFieldValue = workItemFieldValue.replace(/[^a-zA-Z0-9]/g, settingsDocument.nonAlphanumericCharactersReplacement);
