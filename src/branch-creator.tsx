@@ -71,7 +71,7 @@ export class BranchCreator {
         tokens.forEach((token) => {
             let workItemFieldName = token.replace('${', '').replace('}', '');
             let workItemFieldValue = ""
-            if (workItemFieldName == "SourceBranchName") {
+            if ((workItemFieldName == "SourceBranchName") || (workItemFieldName == "SourceBranchNameWithReplacement")) {
                 workItemFieldValue = sourceBranchName
             }
             else if (workItemFieldName == "SourceBranchNameTail") {
@@ -82,7 +82,7 @@ export class BranchCreator {
             }
 
             if (workItemFieldValue) {
-                if (typeof workItemFieldValue.replace === 'function') {
+                if ((typeof workItemFieldValue.replace === 'function') && (workItemFieldName != "SourceBranchName")) {
                     workItemFieldValue = workItemFieldValue.replace(/[^a-zA-Z0-9]/g, settingsDocument.nonAlphanumericCharactersReplacement);
                 }
             }
