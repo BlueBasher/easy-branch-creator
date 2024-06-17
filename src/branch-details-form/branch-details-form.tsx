@@ -44,8 +44,6 @@ class BranchDetailsForm extends React.Component<{}, ISelectBranchDetailsState> {
 
             this.setState({ projectName: config.projectName, workItems: config.workItems, selectedRepositoryId: config.initialValue, ready: false, branchNames: [] });
 
-            await this.setBranchNames();
-
             this.setState(prevState => ({
                 ...prevState,
                 ready: true
@@ -111,7 +109,13 @@ class BranchDetailsForm extends React.Component<{}, ISelectBranchDetailsState> {
             ...prevState,
             sourceBranchName: newBranchName
         }));
-    }
+        // Update the branch name
+        this.setBranchNames();
+        this.setState(prevState => ({
+            ...prevState,
+            ready: true
+        }));
+}
 
     private async setBranchNames() {
         if (this.state.projectName) {

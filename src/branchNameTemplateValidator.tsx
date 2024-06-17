@@ -40,8 +40,9 @@ export class BranchNameTemplateValidator {
     private getUnknownFields(tokens: string[], workItemFieldNames: string[]): string[] {
         const allFieldNames = Object.assign([], workItemFieldNames)
         allFieldNames.push("SourceBranchName")
+        allFieldNames.push("SourceBranchNameWithReplacement")
         allFieldNames.push("SourceBranchNameTail")
         const fieldNames = tokens.map(token => token.replace('${', '').replace('}', ''));
-        return fieldNames.filter(x => workItemFieldNames.indexOf(x) === -1);
+        return fieldNames.filter(x => allFieldNames.indexOf(x) === -1);
     }
 }
